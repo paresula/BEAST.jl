@@ -9,6 +9,7 @@ function innerintegrals!(op::MWSingleLayer3DSng, p, g, f, t, s, z,
         strat::WiltonSERule, dx)
 
     γ = op.gamma
+    T = typeof(γ)
     x = cartesian(p)
     n = cross(s[1]-s[3],s[2]-s[3])
     n /= norm(n)

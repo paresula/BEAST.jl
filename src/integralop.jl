@@ -67,7 +67,6 @@ Computes the matrix of operator biop wrt the finite element spaces tfs and bfs
 """
 function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
         quadstrat=defaultquadstrat(biop, tfs, bfs))
-
     test_elements, tad = assemblydata(tfs)
     bsis_elements, bad = assemblydata(bfs)
 
@@ -76,7 +75,6 @@ function assemblechunk!(biop::IntegralOperator, tfs::Space, bfs::Space, store;
 
     qd = quaddata(biop, tshapes, bshapes, test_elements, bsis_elements, quadstrat)
     zlocal = zeros(scalartype(biop, tfs, bfs), 2num_tshapes, 2num_bshapes)
-
     if !CompScienceMeshes.refines(tfs.geo, bfs.geo)
         assemblechunk_body!(biop,
             tshapes, test_elements, tad,
@@ -96,7 +94,6 @@ function assemblechunk_body!(biop,
         test_shapes, test_elements, test_assembly_data,
         trial_shapes, trial_elements, trial_assembly_data,
         qd, zlocal, store; quadstrat)
-
     myid = Threads.threadid()
     myid == 1 && print("dots out of 10: ")
     todo, done, pctg = length(test_elements), 0, 0
