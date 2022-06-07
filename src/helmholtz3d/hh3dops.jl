@@ -428,6 +428,12 @@ module Helmholtz3D
             amplitude=one(eltype(direction))) =
         Mod.HH3DPlaneWave(direction, wavenumber)
 
+#=     sphericalwave(;
+            location=error("location is a required argument"),
+            wavenumber=error("wavenumber is a required argument"),
+            amplitude=one(eltype(direction))) =
+        Mod.HH3DSphericalWave(location, wavenumber, amplitude)
+ =#
     doublelayer(;gamma=error("gamma missing"), alpha=one(gamma)) =
         Mod.HH3DDoubleLayer(alpha, gamma)
 

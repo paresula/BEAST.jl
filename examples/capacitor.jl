@@ -48,7 +48,7 @@ EFIE = @varform η*T[k,j] == f[trc(k)]
 
 # discretise & solve the equation
 efie = @discretise EFIE j∈RT k∈RT
-u = solve(efie)
+u = gmres(efie)
 
 #Calculate & plot face currents
 fcr,geo = facecurrents(u, RT); println("Face currents calculated")
