@@ -7,6 +7,10 @@ struct HH3DSingleLayerNear{K}
   gamma::K
 end
 
+struct HH3DSingleLayerNearGrad{K}
+  gamma::K
+end
+
 function HH3DDoubleLayerNear(;wavenumber=error("wavenumber is a required argument"))
   if iszero(real(wavenumber))
     HH3DDoubleLayerNear(-imag(wavenumber))
@@ -23,7 +27,15 @@ function HH3DSingleLayerNear(;wavenumber=error("wavenumber is a required argumen
   end
 end
 
-const HHNearField3D = Union{HH3DDoubleLayerNear, HH3DSingleLayerNear}
+function HH3DSingleLayerNearGrad(;wavenumber=error("wavenumber is a required argument"))
+  if iszero(real(wavenumber))
+    HH3DSingleLayerNearGrad(-imag(wavenumber))
+  else
+    HH3DSingleLayerNearGrad(wavenumber*im)
+  end
+end
+
+const HHNearField3D = Union{HH3DDoubleLayerNear, HH3DSingleLayerNear, HH3DSingleLayerNearGrad}
 quaddata(op::HHNearField3D,rs,els) = quadpoints(rs,els,(3,))
 quadrule(op::HHNearField3D,refspace,p,y,q,el,qdata) = qdata[1,q]
 
@@ -80,4 +92,12 @@ function integrand(op::HH3DSingleLayerNear, krn, y, f, p)
   G = krn.green
   fx = f.value
   return G*fx
+end
+
+function integrand(op::HH3DSingleLayerNearGrad, krn, y, f, p)
+  ∇G = krn.gradgreen
+  G = krn.green
+  fx = f.value
+  nx = krn.nx
+  return ∇G
 end
