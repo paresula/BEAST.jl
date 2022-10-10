@@ -4,9 +4,10 @@ using StaticArrays
 using LinearAlgebra
 using Test
 using Plotly
+using Statistics
 
 ## Looking at convergence 
-hs = [0.5,0.45,0.4,0.35,0.3,0.25,0.2,0.15,0.1,0.08, 0.07]
+hs = [0.5,0.4,0.4,0.3,0.3,0.2,0.2,0.1,0.1, 0.08,0.06]
 #irs = [0.99,0.95,0.91,0.87, 0.83, 0.79, 0.75]
 irs=[0.8]
 err_IDPSL_pot=zeros(Float64, length(hs), length(irs))
@@ -28,7 +29,7 @@ err_EDPDL_field=zeros(Float64, length(hs), length(irs))
 err_ENPSL_field=zeros(Float64, length(hs), length(irs))
 err_ENPDL_field=zeros(Float64, length(hs), length(irs))
 for (i,h) in enumerate(hs)
-
+    k = 0.0
     r=50.0
     sphere = meshsphere(r,h*r)
     X0 = lagrangecxd0(sphere)
@@ -152,40 +153,40 @@ end
 plot([  scatter(x = hs, y = err_IDPSL_pot[:,end], name = "IDPSL"),
         scatter(x = hs, y = err_IDPDL_pot[:,end], name = "IDPDL"),
         scatter(x = hs, y = err_INPSL_pot[:,end], name = "INPSL"),
-        scatter(x = hs, y = err_INPDL_pot[:,end], name = "INPDL"),
-        scatter(x=hs,y=hs.^2/1000, name = "h^2"),
-        scatter(x=hs,y=hs.^3/10, name = "h^3"),
-        scatter(x=hs,y=hs, name = "h")],
+        scatter(x = hs, y = err_INPDL_pot[:,end], name = "INPDL")],
+        #scatter(x=hs,y=hs.^2/1000, name = "h^2"),
+        #scatter(x=hs,y=hs.^3/10, name = "h^3"),
+        #scatter(x=hs,y=hs, name = "h")],
         Layout(
             yaxis_type="log", 
             xaxis_type="log",
-            title = "Errors of the potential for the interior problem formualtions")
+            title = "Errors - potential - interior problem")
     )
 
 plot([  scatter(x = hs, y = err_EDPSL_pot[:,end], name = "EDPSL"),
     scatter(x = hs, y = err_EDPDL_pot[:,end], name = "EDPDL"),
     scatter(x = hs, y = err_ENPSL_pot[:,end], name = "ENPSL"),
-    scatter(x = hs, y = err_ENPDL_pot[:,end], name = "ENPDL"),
-    scatter(x=hs,y=hs.^2/hs[end]^2*err_ENPDL_pot[end], name = "h^2"),
+    scatter(x = hs, y = err_ENPDL_pot[:,end], name = "ENPDL")],
+#    scatter(x=hs,y=hs.^2/hs[end]^2*err_ENPDL_pot[end], name = "h^2"),
     #scatter(x=hs,y=hs.^3/10, name = "h^3"),
-    scatter(x=hs,y=hs/hs[end]*err_EDPDL_pot[end], name = "h")],
+ #   scatter(x=hs,y=hs/hs[end]*err_EDPDL_pot[end], name = "h")],
     Layout(
         yaxis_type="log", 
         xaxis_type="log",
-        title = "Errors of the potential for the exterior problem formualtions")
+        title = "Errors - potential - exterior problem")
 )
 
 plot([  scatter(x = hs, y = err_IDPSL_field[:,end], name = "IDPSL"),
         scatter(x = hs, y = err_IDPDL_field[:,end], name = "IDPDL"),
         scatter(x = hs, y = err_INPSL_field[:,end], name = "INPSL"),
-        scatter(x = hs, y = err_INPDL_field[:,end], name = "INPDL"),
-        scatter(x=hs,y=hs.^2/hs[end]^2*err_INPDL_field[end], name = "h^2"),
-        scatter(x=hs,y=hs.^3/hs[end]^3*err_IDPSL_field[end], name = "h^3"),
-        scatter(x=hs,y=hs/hs[end]*err_IDPDL_field[end], name = "h")],
+        scatter(x = hs, y = err_INPDL_field[:,end], name = "INPDL")],
+        #scatter(x=hs,y=hs.^2/hs[end]^2*err_INPDL_field[end], name = "h^2"),
+        #scatter(x=hs,y=hs.^3/hs[end]^3*err_IDPSL_field[end], name = "h^3"),
+        #scatter(x=hs,y=hs/hs[end]*err_IDPDL_field[end], name = "h")],
         Layout(
             yaxis_type="log", 
             xaxis_type="log",
-            title = "Errors of the field for the interior problem formualtions")
+            title = "Errors - field - interior problem")
     )
 
 plot([  scatter(x = hs, y = err_EDPSL_field[:,end], name = "EDPSL"),
@@ -198,5 +199,5 @@ plot([  scatter(x = hs, y = err_EDPSL_field[:,end], name = "EDPSL"),
     Layout(
         yaxis_type="log", 
         xaxis_type="log",
-        title = "Errors of the field for the exterior problem formualtions")
+        title = "Errors - field - exterior problem")
 )
