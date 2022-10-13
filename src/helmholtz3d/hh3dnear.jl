@@ -23,6 +23,30 @@ function HH3DDoubleLayerNear(;wavenumber=error("wavenumber is a required argumen
   end
 end
 
+function HH3DSingleLayerNear(;wavenumber=error("wavenumber is a required argument"))
+  if iszero(real(wavenumber))
+    HH3DSingleLayerNear(-imag(wavenumber))
+  else
+    HH3DSingleLayerNear(wavenumber*im)
+  end
+end
+
+function HH3DHyperSingularNear(;wavenumber=error("wavenumber is a required argument"))
+  if iszero(real(wavenumber))
+    HH3DHyperSingularNear(-imag(wavenumber))
+  else
+    HH3DHyperSingularNear(wavenumber*im)
+  end
+end
+
+function HH3DDoubleLayerTransposedNear(;wavenumber=error("wavenumber is a required argument"))
+  if iszero(real(wavenumber))
+    HH3DDoubleLayerTransposedNear(-imag(wavenumber))
+  else
+    HH3DDoubleLayerTranposedNear(wavenumber*im)
+  end
+end
+
 HH3DNear = Union{HH3DSingleLayerNear, HH3DDoubleLayerNear, HH3DDoubleLayerTransposedNear, HH3DHyperSingularNear}
 
 quaddata(op::HH3DNear,rs,els) = quadpoints(rs,els,(3,))

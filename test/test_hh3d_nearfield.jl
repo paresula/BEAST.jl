@@ -3,15 +3,14 @@ using CompScienceMeshes
 using StaticArrays
 using LinearAlgebra
 using Test
-using Plotly
 
-r=50.0
+r=10.0
 λ = 20*r
 k = 2*π/λ
 
 sphere = meshsphere(r,0.2*r)
 X0 = lagrangecxd0(sphere)
-X1 = lagrangec0d1(sphere) 
+X1 = lagrangec0d1(sphere)
 
 𝓢 = Helmholtz3D.singlelayer(gamma=im*k)
 𝓓 = Helmholtz3D.doublelayer(gamma=im*k)
@@ -34,16 +33,16 @@ gN = assemble(ScalarTrace(∂nΦ_inc), X1)
 G = assemble(Identity(), X1, X1)
 𝗼=ones(numfunctions(X1))
 
-M_IDPSL = assemble(𝓢, X0, X0)
+M_IDPSL = assemble(𝓢, X0, X0) # Matrix for interior Dirichlet problem, single layer potential
 M_IDPDL = (-1/2*assemble(Identity(),X1,X1) + assemble(𝓓, X1,X1))
 
-M_INPDL = assemble(𝓝, X1, X1)+G*𝗼*𝗼'*G
-M_INPSL = (1/2*assemble(Identity(),X1,X1) + assemble(𝓓t, X1, X1))
+M_INPDL = -assemble(𝓝, X1, X1)+G*𝗼*𝗼'*G # matrix for interior Neumann problem, double layer potential
+M_INPSL = (1/2*assemble(Identity(),X1,X1) + assemble(𝓓t, X1, X1))+G*𝗼*𝗼'*G
 
 ρ_IDPSL = M_IDPSL \ (-gD0)
 ρ_IDPDL = M_IDPDL \ (gD1)
 
-ρ_INPDL = M_INPDL \ (-gN)
+ρ_INPDL = M_INPDL \ (gN)
 ρ_INPSL = M_INPSL \ (-gN)
 
 pts = meshsphere(0.8*r, 0.8*0.6*r).vertices # sphere inside on which the potential and field are evaluated
@@ -54,10 +53,10 @@ pot_IDPDL = potential(HH3DDoubleLayerNear(im*k), pts, ρ_IDPDL, X1, type = Compl
 pot_INPSL = potential(HH3DSingleLayerNear(im*k), pts, ρ_INPSL, X1, type=ComplexF64)
 pot_INPDL = potential(HH3DDoubleLayerNear(im*k), pts, ρ_INPDL, X1, type = ComplexF64)
 
-err_IDPSL_pot = norm(pot_IDPSL+Φ_inc.(pts))./norm(Φ_inc.(pts))
-err_IDPDL_pot = norm(pot_IDPDL+Φ_inc.(pts))./norm(Φ_inc.(pts))
-err_INPSL_pot = norm(pot_INPSL+Φ_inc.(pts))./norm(Φ_inc.(pts))
-err_INPDL_pot = norm(pot_INPDL+Φ_inc.(pts))./norm(Φ_inc.(pts))
+err_IDPSL_pot = norm(pot_IDPSL+Φ_inc.(pts))/norm(Φ_inc.(pts))
+err_IDPDL_pot = norm(pot_IDPDL+Φ_inc.(pts))/norm(Φ_inc.(pts))
+err_INPSL_pot = norm(pot_INPSL+Φ_inc.(pts))/norm(Φ_inc.(pts))
+err_INPDL_pot = norm(pot_INPDL+Φ_inc.(pts))/norm(Φ_inc.(pts))
 
 fieldtheo(x) = q/(4*π*ϵ)*(((x-pos1)*exp(-im*k*norm(x-pos1))/(norm(x-pos1)^2)*(im*k+1/(norm(x-pos1))))-((x-pos2)*exp(-im*k*norm(x-pos2))/(norm(x-pos2)^2)*(im*k+1/(norm(x-pos2)))))
 
@@ -71,7 +70,7 @@ err_IDPDL_field = norm(field_IDPDL+fieldtheo.(pts))/norm(fieldtheo.(pts))
 err_INPSL_field = norm(field_INPSL+fieldtheo.(pts))/norm(fieldtheo.(pts))
 err_INPDL_field = norm(field_INPDL+fieldtheo.(pts))/norm(fieldtheo.(pts))
 
-## Exterior problem - formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.2
+# Exterior problem - formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.2
 
 pos1 = SVector(r*0.5,0.0,0.0)
 pos2=SVector(-r*0.5,0.0,0.0)
@@ -87,7 +86,7 @@ M_EDPSL = assemble(𝓢, X0, X0)
 M_EDPDL = (1/2*assemble(Identity(),X1,X1) + assemble(𝓓, X1,X1))
 
 M_ENPDL = -assemble(𝓝, X1, X1)+G*𝗼*𝗼'*G
-M_ENPSL = -1/2*assemble(Identity(),X1,X1) + assemble(𝓓t, X1, X1)
+M_ENPSL = -1/2*assemble(Identity(),X1,X1) + assemble(𝓓t, X1, X1)+G*𝗼*𝗼'*G
 
 ρ_EDPSL = M_EDPSL \ (-gD0)
 ρ_EDPDL = M_EDPDL \ (gD1)
@@ -121,7 +120,7 @@ err_ENPDL_field = norm(field_ENPDL+fieldtheo.(pts))/norm(fieldtheo.(pts))
 # errors of interior problems
 @test err_IDPSL_pot < 0.01
 @test err_IDPDL_pot < 0.01
-@test err_INPSL_pot < 0.05
+@test err_INPSL_pot < 0.02
 @test err_INPDL_pot < 0.01
 
 @test err_IDPSL_field < 0.01
