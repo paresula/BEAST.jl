@@ -162,3 +162,70 @@ function (f::NormalDerivative{T})(manipoint) where T<:HH3DMonopole
 end
 
 integrand(::NormalDerivative, test_vals, field_vals) = dot(test_vals[1], field_vals)
+
+
+"""
+    HH3DDipole
+
+Potential of a dipole-type source
+"""
+struct HH3DDipole{T,P}
+    position::P
+    wavenumber::T
+    amplitude::T
+    direction::P
+end
+
+function HH3DDipole(;position=SVector(0.0,0.0,0.0), wavenumber=0.0, amplitude=1.0, direction=SVector(1.0,0.0,0.0))
+    w, a = promote(wavenumber, amplitude)
+    HH3DDipole(position, w, a, direction)
+end
+
+function (f::HH3DDipole)(r)
+    k = f.wavenumber
+    p = f.position
+    a = f.amplitude
+    q = f.direction
+    return  a * q ⋅ (r - p) / norm(r - p)^3
+end
+
+struct gradHH3DDipole{T,P}
+    position::P
+    wavenumber::T
+    amplitude::T
+    direction::P
+end
+
+function gradHH3DDipole(;position=SVector(0.0,0.0,0.0), wavenumber=0.0, amplitude=1.0, direction=SVector(1.0,0.0,0.0))
+    w, a = promote(wavenumber, amplitude)
+    gradHH3DDipole(position, w, a, direction)
+end
+
+function (f::gradHH3DDipole)(r)
+    a = f.amplitude
+    k = f.wavenumber
+    p = f.position
+    vecR = r - p
+    q = f.direction
+    R = norm(vecR)
+
+    return a * (q / R^3 - 3 * (vecR)*(q⋅vecR) / R^5)
+end
+
+function grad(m::HH3DDipole)
+    return gradHH3DDipole(m.position, m.wavenumber, m.amplitude, m.direction)
+end
+
+*(a::Number, m::HH3DDipole) = HH3DDipole(m.position, m.wavenumber, a * m.amplitude, m.direction)
+*(a::Number, m::gradHH3DDipole) = gradHH3DDipole(m.position, m.wavenumber, a * m.amplitude, m.direction)
+
+dot(::NormalVector, m::gradHH3DDipole) = NormalDerivative(HH3DDipole(m.position, m.wavenumber, m.amplitude, m.direction))
+
+function (f::NormalDerivative{T})(manipoint) where T<:HH3DDipole
+    m = f.field
+    grad_m = grad(m)
+    n = normal(manipoint)
+    r = cartesian(manipoint)
+
+    return dot(n, grad_m(r))
+end

@@ -56,6 +56,7 @@ export ∂n, grad
 export HH3DHyperSingularFDBIO
 export DirichletTrace
 export HH3DMonopole, gradHH3DMonopole
+export HH3DDipole, gradHH3DDipole
 export HH3DLinearPotential
 
 export HH3DSingleLayerNear
