@@ -281,6 +281,15 @@ function quadrule(op::Helmholtz3DOp,
     i, test_element, j, trial_element, quadrature_data,
     qs::DoubleNumWiltonSauterQStrat)
 
+    tol, hits = eps(eltype(eltype(test_element.vertices))), 0
+    for t in test_element.vertices
+        for s in trial_element.vertices
+            norm(t-s) < tol && (hits +=1)
+    end end
+
+    hits == 3 && return SauterSchwabQuadrature.CommonFace(quadrature_data.gausslegendre[3])
+    hits == 2 && return SauterSchwabQuadrature.CommonEdge(quadrature_data.gausslegendre[2])
+    hits == 1 && return SauterSchwabQuadrature.CommonVertex(quadrature_data.gausslegendre[1])
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]
 
