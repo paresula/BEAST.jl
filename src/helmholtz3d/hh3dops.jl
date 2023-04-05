@@ -281,10 +281,63 @@ function quadrule(op::Helmholtz3DOp,
     i, test_element, j, trial_element, quadrature_data,
     qs::DoubleNumWiltonSauterQStrat)
 
-    tol, hits = eps(eltype(eltype(test_element.vertices))), 0
+    return DoubleQuadRule(
+        quadrature_data[1][1,i],
+        quadrature_data[2][1,j])
+end
+
+function quadrule(op::HH3DDoubleLayerTransposed,
+    test_refspace::LagrangeRefSpace{T,1} where T,
+    trial_refspace::LagrangeRefSpace{T,0} where T,
+    i, test_element, j, trial_element, quadrature_data,
+    qs::DoubleNumWiltonSauterQStrat)
+    
+    tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
+    dmin2 = floatmax(eltype(eltype(test_element.vertices)))
+
     for t in test_element.vertices
         for s in trial_element.vertices
-            norm(t-s) < tol && (hits +=1)
+            d2 = LinearAlgebra.norm_sqr(t-s)
+            dmin2 = min(dmin2, d2)
+            hits += (d2 < tol)
+    end end
+
+    hits == 3 && return SauterSchwabQuadrature.CommonFace(quadrature_data.gausslegendre[3])
+    hits == 2 && return SauterSchwabQuadrature.CommonEdge(quadrature_data.gausslegendre[2])
+    hits == 1 && return SauterSchwabQuadrature.CommonVertex(quadrature_data.gausslegendre[1])
+    
+    test_quadpoints  = quadrature_data[1]
+    trial_quadpoints = quadrature_data[2]
+    test_quadpoints  = quadrature_data.test_qp
+    trial_quadpoints = quadrature_data.bsis_qp
+    h2 = volume(trial_element)
+    xtol2 = 0.04 #0.2 * 0.2
+    k2 = abs2(op.gamma)
+
+   #=  max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
+        test_quadpoints[1,i],
+        DoubleQuadRule(
+            test_quadpoints[1,i],
+            trial_quadpoints[1,j])) =#
+    return DoubleQuadRule(
+        quadrature_data[1][1,i],
+        quadrature_data[2][1,j])
+end
+
+function quadrule(op::HH3DDoubleLayer,
+    test_refspace::LagrangeRefSpace{T,0} where T,
+    trial_refspace::LagrangeRefSpace{T,1} where T,
+    i, test_element, j, trial_element, quadrature_data,
+    qs::DoubleNumWiltonSauterQStrat)
+
+    tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
+    dmin2 = floatmax(eltype(eltype(test_element.vertices)))
+
+    for t in test_element.vertices
+        for s in trial_element.vertices
+            d2 = LinearAlgebra.norm_sqr(t-s)
+            dmin2 = min(dmin2, d2)
+            hits += (d2 < tol)
     end end
 
     hits == 3 && return SauterSchwabQuadrature.CommonFace(quadrature_data.gausslegendre[3])
@@ -292,6 +345,28 @@ function quadrule(op::Helmholtz3DOp,
     hits == 1 && return SauterSchwabQuadrature.CommonVertex(quadrature_data.gausslegendre[1])
     test_quadpoints  = quadrature_data[1]
     trial_quadpoints = quadrature_data[2]
+
+    test_quadpoints  = quadrature_data.test_qp
+    trial_quadpoints = quadrature_data.bsis_qp
+    h2 = volume(trial_element)
+    xtol2 = .4#0.2 * 0.2
+    k2 = abs2(op.gamma)
+
+#=     max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
+        test_quadpoints[1,i],
+        DoubleQuadRule(
+            test_quadpoints[1,i],
+            trial_quadpoints[1,j])) =#
+    return DoubleQuadRule(
+        quadrature_data[1][1,i],
+        quadrature_data[2][1,j])
+end
+
+
+function quadrule(op::Helmholtz3DOp,
+    test_refspace::RefSpace, trial_refspace::RefSpace,
+    i, test_element, j, trial_element, quadrature_data,
+    qs::DoubleNumQStrat)
 
     return DoubleQuadRule(
         quadrature_data[1][1,i],
