@@ -68,7 +68,7 @@ function pulled_back_integrand(op::HH3DHyperSingularFDBIO,
     end
 end
 
-function pulled_back_integrand(op::HH3DDoubleLayer,
+function pulled_back_integrand(op::HH3DDoubleLayerFDBIO,
     test_local_space::LagrangeRefSpace{<:Any,0},
     trial_local_space::LagrangeRefSpace{<:Any,1},
     test_chart, trial_chart)
@@ -98,7 +98,7 @@ function pulled_back_integrand(op::HH3DDoubleLayer,
     end
 end
 
-function pulled_back_integrand(op::HH3DDoubleLayerTransposed,
+function pulled_back_integrand(op::HH3DDoubleLayerTransposedFDBIO,
     test_local_space::LagrangeRefSpace{<:Any,1},
     trial_local_space::LagrangeRefSpace{<:Any,0},
     test_chart, trial_chart)

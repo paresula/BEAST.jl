@@ -16,6 +16,24 @@ struct HH3DHyperSingularFDBIO{T,K} <: Helmholtz3DOp
     gamma::K
 end
 
+struct HH3DHyperSingularReg{T,K} <: Helmholtz3DOpReg
+    "coefficient of the weakly singular term"
+    alpha::T
+    "coefficient of the hyper singular term"
+    beta::T
+    "`im*κ` with `κ` the wave number"
+    gamma::K
+end
+
+struct HH3DHyperSingularSng{T,K} <: Helmholtz3DOp
+    "coefficient of the weakly singular term"
+    alpha::T
+    "coefficient of the hyper singular term"
+    beta::T
+    "`im*κ` with `κ` the wave number"
+    gamma::K
+end
+
 HH3DHyperSingularFDBIO(gamma) = HH3DHyperSingularFDBIO(gamma^2, one(gamma), gamma)
 scalartype(op::HH3DHyperSingularFDBIO) = promote_type(typeof(op.alpha), typeof(op.beta), typeof(op.gamma))
 
@@ -40,12 +58,31 @@ struct HH3DSingleLayerSng{T,K} <: Helmholtz3DOp
     gamma::K
 end
 
-struct HH3DDoubleLayer{T,K} <: Helmholtz3DOp
+struct HH3DDoubleLayerFDBIO{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
+struct HH3DDoubleLayerReg{T,K} <: Helmholtz3DOpReg
     alpha::T
     gamma::K
 end
 
-struct HH3DDoubleLayerTransposed{T,K} <: Helmholtz3DOp
+struct HH3DDoubleLayerSng{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerTransposedFDBIO{T,K} <: Helmholtz3DOp
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerTransposedReg{T,K} <: Helmholtz3DOpReg
+    alpha::T
+    gamma::K
+end
+
+struct HH3DDoubleLayerTransposedSng{T,K} <: Helmholtz3DOp
     alpha::T
     gamma::K
 end
@@ -124,9 +161,13 @@ function quadrule(op::HH3DSingleLayerFDBIO,
 
 
     tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
+    dmin2 = floatmax(eltype(eltype(test_element.vertices)))
+
     for t in test_element.vertices
         for s in trial_element.vertices
-            norm(t-s) < tol && (hits +=1)
+            d2 = LinearAlgebra.norm_sqr(t-s)
+            dmin2 = min(dmin2, d2)
+            hits += (d2 < tol)
     end end
 
     hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
@@ -135,12 +176,15 @@ function quadrule(op::HH3DSingleLayerFDBIO,
 
     test_quadpoints  = qd.test_qp
     trial_quadpoints = qd.bsis_qp
+#=     h2 = volume(trial_element)
+    xtol2 = 4.0#0.2 * 0.2
+    k2 = abs2(op.gamma)
 
-    # hits != 0 && return WiltonSERule(
-    #     test_quadpoints[1,i],
-    #     DoubleQuadRule(
-    #         test_quadpoints[1,i],
-    #         trial_quadpoints[1,j]))
+    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
+        test_quadpoints[1,i],
+        DoubleQuadRule(
+            test_quadpoints[1,i],
+            trial_quadpoints[1,j])) =#
 
     return DoubleQuadRule(
         qd.test_qp[1,i],
@@ -153,27 +197,6 @@ function quadrule(op::HH3DSingleLayerFDBIO,
         trial_refspace::LagrangeRefSpace{T,0} where T,
         i, test_element, j, trial_element, qd,
         qs::DoubleNumQStrat)
-
-
-    tol, hits = sqrt(eps(eltype(eltype(test_element.vertices)))), 0
-    for t in test_element.vertices
-        for s in trial_element.vertices
-            norm(t-s) < tol && (hits +=1)
-    end end
-
-
-    # hits == 3 && return SauterSchwabQuadrature.CommonFace(qd.gausslegendre[3])
-    # hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
-    # hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
-
-    test_quadpoints  = qd.test_qp
-    trial_quadpoints = qd.bsis_qp
-
-    hits != 0 && return WiltonSERule(
-        test_quadpoints[1,i],
-        DoubleQuadRule(
-            test_quadpoints[1,i],
-            trial_quadpoints[1,j]))
 
     return DoubleQuadRule(
         qd.test_qp[1,i],
@@ -197,15 +220,18 @@ function quadrule(op::HH3DHyperSingularFDBIO,
     hits == 2 && return SauterSchwabQuadrature.CommonEdge(qd.gausslegendre[2])
     hits == 1 && return SauterSchwabQuadrature.CommonVertex(qd.gausslegendre[1])
 
-    # test_quadpoints  = qd.test_qp
-    # trial_quadpoints = qd.bsis_qp
-
-    # hits != 0 && return WiltonSERule(
-    #     test_quadpoints[1,i],
-    #     DoubleQuadRule(
-    #         test_quadpoints[1,i],
-    #         trial_quadpoints[1,j]))
-
+    test_quadpoints  = qd.test_qp
+    trial_quadpoints = qd.bsis_qp
+    h2 = volume(trial_element)
+    xtol2 = 40.0#0.2 * 0.2
+    k2 = abs2(op.gamma)
+#= 
+    max(dmin2*k2, dmin2/16h2) < xtol2 && return WiltonSERule(
+        test_quadpoints[1,i],
+        DoubleQuadRule(
+            test_quadpoints[1,i],
+            trial_quadpoints[1,j]))
+ =#
     return DoubleQuadRule(
         qd.test_qp[1,i],
         qd.bsis_qp[1,j])
@@ -286,7 +312,7 @@ function quadrule(op::Helmholtz3DOp,
         quadrature_data[2][1,j])
 end
 
-function quadrule(op::HH3DDoubleLayerTransposed,
+function quadrule(op::HH3DDoubleLayerTransposedFDBIO,
     test_refspace::LagrangeRefSpace{T,1} where T,
     trial_refspace::LagrangeRefSpace{T,0} where T,
     i, test_element, j, trial_element, quadrature_data,
@@ -324,7 +350,7 @@ function quadrule(op::HH3DDoubleLayerTransposed,
         quadrature_data[2][1,j])
 end
 
-function quadrule(op::HH3DDoubleLayer,
+function quadrule(op::HH3DDoubleLayerFDBIO,
     test_refspace::LagrangeRefSpace{T,0} where T,
     trial_refspace::LagrangeRefSpace{T,1} where T,
     i, test_element, j, trial_element, quadrature_data,
@@ -388,7 +414,40 @@ end
 
 
 
+function (igd::Integrand{HH3DHyperSingularFDBIO})(x,y,f,g)
+    α = igd.operator.alpha
+    β = igd.operator.alpha
+    γ = igd.operator.gamma
 
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1 / R
+    green = exp(-γ*R)*(i4pi*iR)
+    nx = normal(x)
+    ny = normal(y)
+    
+    _integrands(f,g) do fi, gi
+        α*dot(nx,ny)*gi.value*fi.value*green + β*dot(gi.curl,fi.curl)*green
+    end
+end
+
+function (igd::Integrand{HH3DHyperSingularReg})(x,y,f,g)
+    α = igd.operator.alpha
+    β = igd.operator.alpha
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1 / R
+    green = (expm1(-γ*R) + γ*R - 0.5*γ*R^2) / (4pi*R)
+    nx = normal(x)
+    ny = normal(y)
+    
+    _integrands(f,g) do fi, gi
+        α*dot(nx,ny)*gi.value*fi.value*green + β*dot(gi.curl,fi.curl)*green
+    end
+end
+# legacy kernel for HyperSingular Operator
 function integrand(op::HH3DHyperSingularFDBIO,
         kernel, test_values, test_element, trial_values, trial_element)
 
@@ -408,16 +467,48 @@ end
 
 
 
-
+# singlelayer
 
 HH3DSingleLayerFDBIO(gamma) = HH3DSingleLayerFDBIO(one(gamma), gamma)
 
 regularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerReg(op.alpha, op.gamma)
 singularpart(op::HH3DSingleLayerFDBIO) = HH3DSingleLayerSng(op.alpha, op.gamma)
 
+function (igd::Integrand{<:HH3DSingleLayerFDBIO})(x,y,f,g)
+    α = igd.operator.alpha
+    γ = igd.operator.gamma
+
+   r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1 / R
+    green = exp(-γ*R)*(i4pi*iR)
+
+    αG = α * green
+
+    _integrands(f,g) do fi, gi
+        dot(gi.value, αG*fi.value)
+    end
+end
+
+function (igd::Integrand{<:HH3DSingleLayerReg})(x,y,f,g)
+    α = igd.operator.alpha
+    γ = igd.operator.gamma
+
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1 / R
+    green = (expm1(-γ*R) + γ*R - 0.5*γ^2*R^2) / (4pi*R)
+    αG = α * green
+
+    _integrands(f,g) do fi, gi
+        dot(gi.value, αG*fi.value)
+    end
+end
+
+# legacy kernel for singlelayer operator
 function integrand(op::Union{HH3DSingleLayerFDBIO,HH3DSingleLayerReg},
         kernel, test_values, test_element, trial_values, trial_element)
-
+err
     α = op.alpha
     G = kernel.green
 
@@ -449,18 +540,81 @@ function innerintegrals!(op::HH3DSingleLayerSng, test_neighborhood,
     return nothing
 end
 
+# doublelayer
+
+HH3DDoubleLayerFDBIO(gamma) = HH3DDoubleLayerFDBIO(one(gamma), gamma)
+
+regularpart(op::HH3DDoubleLayerFDBIO) = HH3DDoubleLayerReg(op.alpha, op.gamma)
+singularpart(op::HH3DDoubleLayerFDBIO) = HH3DDoubleLayerSng(op.alpha, op.gamma)
 
 
-function integrand(biop::HH3DDoubleLayer,
+function (igd::Integrand{<:HH3DDoubleLayerFDBIO})(x,y,f,g)
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = -(γ + iR) * green * (iR * r)
+    n = normal(y)
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+
+    return _krondot(fvalue,gvalue) * dot(n, -gradgreen)
+end
+
+
+function integrand(biop::HH3DDoubleLayerFDBIO,
         kernel, fp, mp, fq, mq)
 
     nq = normal(mq)
     fp[1] * dot(nq, -kernel.gradgreen) * fq[1]
 end
 
+# double layer transposed
+
+ HH3DDoubleLayerTransposedFDBIO(gamma) = HH3DDoubleLayerTransposedFDBIO(one(gamma), gamma)
+
+ regularpart(op::HH3DDoubleLayerTransposedFDBIO) = HH3DDoubleLayerTransposedReg(op.alpha, op.gamma)
+ singularpart(op::HH3DDoubleLayerTransposedFDBIO) = HH3DDoubleLayerTransposedSng(op.alpha, op.gamma)
+ 
+function (igd::Integrand{<:HH3DDoubleLayerTransposedFDBIO})(x,y,f,g)
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    green = exp(-γ*R)*(iR*i4pi)
+    gradgreen = -(γ + iR) * green * (iR * r)
+    n = normal(x)
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+
+    return _krondot(fvalue,gvalue) * dot(n, gradgreen)
+end
 
 
-function integrand(biop::HH3DDoubleLayerTransposed,
+function (igd::Integrand{<:HH3DDoubleLayerTransposedReg})(x,y,f,g)
+    γ = igd.operator.gamma
+    
+    r = cartesian(x) - cartesian(y)
+    R = norm(r)
+    iR = 1/R
+    γR = γ*R
+    expo = exp(-γR)
+
+    gradgreen = ( -(γR + 1)*expo + (1 - 0.5*γR^2) ) * (i4pi*iR^3) * r
+
+    n = normal(x)
+    fvalue = getvalue(f)
+    gvalue = getvalue(g)
+
+    return _krondot(fvalue,gvalue) * dot(n, gradgreen)
+end
+
+
+
+function integrand(biop::HH3DDoubleLayerTransposedFDBIO,
         kernel, fp, mp, fq, mq)
 
     np = normal(mp)
@@ -513,10 +667,10 @@ module Helmholtz3D
         Mod.HH3DPlaneWave(direction, wavenumber)
 
     doublelayer(;gamma=error("gamma missing"), alpha=one(gamma)) =
-        Mod.HH3DDoubleLayer(alpha, gamma)
+        Mod.HH3DDoubleLayerFDBIO(alpha, gamma)
 
     doublelayer_transposed(;gamma=error("gamma missing"), alpha=one(gamma)) =
-        Mod.HH3DDoubleLayerTransposed(alpha, gamma)
+        Mod.HH3DDoubleLayerTransposedFDBIO(alpha, gamma)
 end
 
 export Helmholtz3D
