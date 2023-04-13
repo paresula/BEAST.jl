@@ -92,7 +92,7 @@ function pulled_back_integrand(op::HH3DDoubleLayerFDBIO,
         G = exp(-γ*R)/(4*π*R)
         inv_R = 1/R
         ∇G = -(γ + inv_R) * G * inv_R * r
-        αnyj∇G = dot(ny,α*∇G*j)
+        αnyj∇G = dot(ny,-α*∇G*j)
         SMatrix{1,3}(f[1].value * αnyj∇G * g[1].value, f[1].value * αnyj∇G * g[2].value,f[1].value * αnyj∇G * g[3].value)
 
     end
@@ -208,14 +208,16 @@ function momintegrals!(op::Helmholtz3DOp,
         trial_triangular_element.vertices[J[3]])
 
     test_sign = Combinatorics.levicivita(I)
-    σ = test_sign
+    trial_sign = Combinatorics.levicivita(J)
+
+    σ = trial_sign
 
     igd = pulled_back_integrand(op, test_local_space, trial_local_space,
         test_triangular_element, trial_triangular_element)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
 
     for i ∈ 1:3
-        out[1,i] += G[K[i]] * σ
+        out[1,i] += G[L[i]] * σ
     end
 
     nothing
@@ -239,15 +241,16 @@ function momintegrals!(op::Helmholtz3DOp,
         trial_triangular_element.vertices[J[2]],
         trial_triangular_element.vertices[J[3]])
 
+        test_sign = Combinatorics.levicivita(I)
         trial_sign = Combinatorics.levicivita(J)
-        σ = trial_sign
+        σ = test_sign
 
     igd = pulled_back_integrand(op, test_local_space, trial_local_space,
         test_triangular_element, trial_triangular_element)
     G = SauterSchwabQuadrature.sauterschwab_parameterized(igd, strat)
 
     for i ∈ 1:3
-        out[i,1] += G[L[i]] * σ
+        out[i,1] += G[K[i]] * σ
     end
 
     nothing
