@@ -59,6 +59,7 @@ include("test_hh2d_exec.jl")
 include("test_hh2d_mie.jl")
 include("test_hh2d_mie_higher_order.jl")
 include("test_hh2d_nearfield.jl")
+include("test_hh2d_static_nearfield.jl")
 
 include("test_wiltonints.jl")
 include("test_sauterschwabints.jl")

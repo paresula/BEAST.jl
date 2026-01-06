@@ -79,8 +79,11 @@ function (f::HH2DMonopole)(r)
     γ = f.gamma
     p = f.position
     a = f.amplitude
-
-    return a / (4 * im) * hankelh2(0, -im*γ * norm(r - p))
+    if γ == 0.0
+        return -a/(2*π) * log(norm(r-p))
+    else
+        return a / (4 * im) * hankelh2(0, -im*γ * norm(r - p))
+    end
 end
 
 struct curlHH2DMonopole{P,K,T}
@@ -125,7 +128,9 @@ function (f::gradHH2DMonopole)(r)
     p = f.position
     vecR = r - p
     R = norm(vecR)
-
+    if γ == 0.0
+        return -a/(2*π)*vecR/R^2
+    end
     return a / (4 * im) * -hankelh2(1, -im*γ * R) * (-im*γ) * vecR / R
 end
 
@@ -169,7 +174,7 @@ function (f::HH2DDirectedMonopole)(r)
 
     x = r[1] - p[1]
     y = r[2] - p[2]
-    
+
     Ix = d[1]
     Iy = d[2]
 
@@ -197,7 +202,7 @@ function (f::curlHH2DDirectedMonopole)(r)
 
     x = r[1] - p[1]
     y = r[2] - p[2]
-    
+
     Ix = d[1]
     Iy = d[2]
 
@@ -210,7 +215,7 @@ function (f::curlHH2DDirectedMonopole)(r)
 
     X = ddhankelh2(k * R) * k * (Iy * x - Ix * y) / R^2 * y + dhankelh2(k * R) * (-Ix / R  - (Iy * x - Ix * y) * y / R^3)
     Y = ddhankelh2(k * R) * k * (Iy * x - Ix * y) / R^2 * x + dhankelh2(k * R) * (+Iy / R  - (Iy * x - Ix * y) * x / R^3)
- 
+
     return a / (4 * im) * k * SVector(X, -Y)
 end
 

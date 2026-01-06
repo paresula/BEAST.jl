@@ -29,7 +29,7 @@ Accordingly, the homogeneous 2D Helmholtz equation reads
     - Δu - k² u = - Δu + γ² u = 0
 
 For physically meaning full real gamma (i.e., γ >= 0), the solutions of
-the BIEs are real-valued. For this reason, we will use gamma and not k to 
+the BIEs are real-valued. For this reason, we will use gamma and not k to
 deduce the underlying scalartype of the operator.
 
 Note that if γ < 0 -- eventhough it is real valued -- the fundamental solution
@@ -114,7 +114,13 @@ end
 # Kernel values for 2D Laplace BIE operators
 function kernelvals(biop::HelmholtzOperator2D{T, K}, tgeo, bgeo) where {T, K <: Val{0}}
 
-    error("We currently do not support 2D Laplace equation")
+    r = tgeo.cart - bgeo.cart
+    R = norm(r)
+    green = -1 / (2π) * log(R)
+    gradgreen = -1 / (2π) * r / R^2
+    txty = dot(normal(tgeo), normal(bgeo))
+
+    KernelValsHelmholtz2D(gamma, r, R, green, gradgreen, txty)
 end
 
 # Kernel values for 2D modified Helmholtz equation BIE operators

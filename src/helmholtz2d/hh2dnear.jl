@@ -10,7 +10,7 @@ struct HH2DSingleLayerNear{T, K}
 
     function HH2DSingleLayerNear(op::HH2DSingleLayerFDBIO)
         return HH2DSingleLayerNear(op.alpha, op.gamma)
-    end 
+    end
 end
 
 struct HH2DDoubleLayerNear{T, K}
@@ -24,7 +24,7 @@ struct HH2DDoubleLayerNear{T, K}
 
     function HH2DDoubleLayerNear(op::HH2DDoubleLayerFDBIO)
         return HH2DDoubleLayerNear(op.alpha, op.gamma)
-    end 
+    end
 end
 
 struct HH2DDoubleLayerTransposedNear{T, K}
@@ -38,7 +38,7 @@ struct HH2DDoubleLayerTransposedNear{T, K}
 
     function HH2DDoubleLayerTransposedNear(op::HH2DDoubleLayerTransposedFDBIO)
         return HH2DDoubleLayerTransposedNear(op.alpha, op.gamma)
-    end 
+    end
 end
 
 struct HH2DHyperSingularNear{T, K}
@@ -106,10 +106,42 @@ function kernelvals(op::HH2DNear,y,p)
 
     # Needed for hypersingular operator
     gradnxgradgreen = ddhankel * (k^2/R^2 * dot(r, nx) * r)
-    gradnxgradgreen += k * hankels[2] * (nx / R - r/R^3 * dot(r, nx)) 
+    gradnxgradgreen += k * hankels[2] * (nx / R - r/R^3 * dot(r, nx))
     gradnxgradgreen *= - im / 4
 
     (;γ, r, R, green, gradgreen, nx, tx, gradnxgradgreen)
+end
+function kernelvals_val0(op, y, p)
+    γ = op.gamma
+    x = cartesian(p)
+    r = y - x
+    R = norm(r)
+    green = -1 / (2π) * log(R)
+    gradgreen = -1 / (2π) * r / R^2
+
+    nx = normal(p)
+    tx = tangents(p, 1) / norm(tangents(p, 1))
+
+    # Needed for hypersingular operator
+    #gradnxgradgreen = -1/(2π)*(nx/R^2-2*dot(r,nx)*r/R^4)
+
+    (;γ, r, R, green, gradgreen, nx, tx, gradnxgradgreen)
+end
+
+function kernelvals(op::HH2DSingleLayerNear{T,K}, y, p) where {T, K <: Val{0}}
+    kernelvals_val0(op, y, p)
+end
+
+function kernelvals(op::HH2DDoubleLayerNear{T,K}, y, p) where {T, K <: Val{0}}
+    kernelvals_val0(op, y, p)
+end
+
+function kernelvals(op::HH2DDoubleLayerTransposedNear{T,K}, y, p) where {T, K <: Val{0}}
+    kernelvals_val0(op, y, p)
+end
+
+function kernelvals(op::HH2DHyperSingularNear{T,K}, y, p) where {T, K <: Val{0}}
+    kernelvals_val0(op, y, p)
 end
 
 function integrand(op::HH2DSingleLayerNear, krn, y, f, p)
