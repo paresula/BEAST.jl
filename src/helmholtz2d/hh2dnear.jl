@@ -123,7 +123,7 @@ function kernelvals_val0(op, y, p)
     tx = tangents(p, 1) / norm(tangents(p, 1))
 
     # Needed for hypersingular operator
-    #gradnxgradgreen = -1/(2π)*(nx/R^2-2*dot(r,nx)*r/R^4)
+    gradnxgradgreen = -1/(2π)*(nx/R^2-2*dot(r,nx)*r/R^4)
 
     (;γ, r, R, green, gradgreen, nx, tx, gradnxgradgreen)
 end

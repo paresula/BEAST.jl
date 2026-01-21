@@ -30,6 +30,12 @@ end
 
 scalartype(f::gradHH2DPlaneWave{P,K,T}) where {P,K,T} = promote_type(eltype(P), K, T)
 
+function grad(m::HH2DPlaneWave)
+    d = m.direction
+    γ = m.gamma
+    a = m.amplitude
+    return gradHH2DPlaneWave(d, γ, a)
+end
 struct curlHH2DPlaneWave{P,K,T} <: Functional{T}
     direction::P
     polarization::P
@@ -56,6 +62,42 @@ end
 *(a::Number, m::HH2DPlaneWave) = HH2DPlaneWave(m.direction, m.gamma, a * m.amplitude)
 *(a::Number, m::gradHH2DPlaneWave) = gradHH2DPlaneWave(m.direction, m.gamma, a * m.amplitude)
 *(a::Number, m::curlHH2DPlaneWave) = curlHH2DPlaneWave(m.direction, m.polarization, m.gamma, a * m.amplitude)
+
+"""
+    HH2DLinearPotential
+
+A linear potential.
+"""
+struct HH2DLinearPotential{P,T} <: Functional{T}
+    direction::P
+    amplitude::T
+end
+
+function (f::HH2DLinearPotential)(r)
+    d = f.direction
+    a = f.amplitude
+    return a * dot(d, r)
+end
+
+scalartype(f::HH2DLinearPotential{P,T}) where {P,T} = promote_type(eltype(P), T)
+
+struct gradHH2DLinearPotential{P,T} <: Functional{T}
+    direction::P
+    amplitude::T
+end
+
+function (f::gradHH2DLinearPotential)(r)
+    d = f.direction
+    a = f.amplitude
+
+    return a * d
+end
+
+scalartype(f::gradHH2DLinearPotential{P,T}) where {P,T} = promote_type(eltype(P), T)
+
+*(a::Number, m::HH2DLinearPotential) = HH2DLinearPotential(m.direction, a * m.amplitude)
+*(a::Number, m::gradHH2DLinearPotential) = gradHH2DLinearPotential(m.direction, a * m.amplitude)
+
 
 
 """
