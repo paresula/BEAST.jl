@@ -51,7 +51,6 @@ function discretise(bf::BilForm, space_mappings::Pair...)
         @assert !haskey(dict, sm.first.idx) "multiple mappings for $(sm.first)"
         dict[sm.first.idx] = sm.second
     end
-
     # check that all symbols where mapped
     for p in eachindex(bf.trial_space) @assert haskey(trial_space_dict,p) end
     for p in eachindex(bf.test_space)  @assert haskey(test_space_dict, p) end
@@ -75,7 +74,7 @@ function discretise(lf::LinForm, space_mappings::Pair...)
 
     # check that all symbols where mapped
     for p in eachindex(lf.test_space)  @assert haskey(test_space_dict, p) end
- 
+
     DiscreteLinform(lf, test_space_dict)
 end
 
@@ -163,10 +162,10 @@ function assemble(lform::LinForm, X::DirectProductSpace;
         else
             U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, numfunctions)
         end
-    else 
+    else
         U = NestedUnitRanges.nestedrange(spatialbasis(X), 1, numfunctions)
     end
-    
+
     N = Base.OneTo(tensordim(x,2))
     ax = _righthandside_axes(x, U, N)
 
@@ -251,7 +250,7 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
     N = numfunctions.(spatialbasis(Y).factors) .* p
 
     MN = numfunctions(X)
-    
+
     U = BlockArrays.blockedrange(M)
     V = BlockArrays.blockedrange(N)
 
@@ -271,7 +270,7 @@ function assemble(bf::BilForm, X::DirectProductSpace, Y::DirectProductSpace;
         for op in reverse(term.trial_ops)
             y = op[end](op[1:end-1]..., y)
         end
-        
+
         a = term.kernel
         z = materialize(a, x, y; quadstrat, kwargs...)
 

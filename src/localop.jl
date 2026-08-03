@@ -74,7 +74,7 @@ function assemble!(biop::LocalOperator, tfs::Space, bfs::Space, store,
 
     numfunctions(tfs) == 0 && return
     numfunctions(bfs) == 0 && return
- 
+
     if geometry(tfs) == geometry(bfs)
         return assemble_local_matched!(biop, tfs, bfs, store; quadstrat)
     end
@@ -143,7 +143,7 @@ function assemble_local_matched!(biop::LocalOperator, tfs::Space, bfs::Space, st
         for i in 1 : size(locmat, 1), j in 1 : size(locmat, 2)
             for (m,a) in tad[p,i], (n,b) in bad[q,j]
                 store(a * locmat[i,j] * b, m, n)
-        
+
         end end
 
         new_pctg = round(Int, (done += 1) / todo * 100)
@@ -370,7 +370,7 @@ function cellinteractions_matched!(zlocal, biop, trefs, brefs, cell, qr)
         w, mp, tvals, bvals = q[1], q[2], q[3], q[4]
         j = w * jacobian(mp)
         kernel = kernelvals(biop, mp)
-        
+
         for n in 1 : num_bshs
             bval = bvals[n]
             for m in 1 : num_tshs

@@ -142,7 +142,7 @@ function assemblechunk_body!(biop,
 
     verbose = (length(test_elements) > 256)
     myid = Threads.threadid()
-    verbose && myid == 1 && print("dots out of 10: ")
+    verbose && myid == 2 && print("dots out of 10: ")
     todo, done, pctg = length(test_elements), 0, 0
     for (p,(tcell,tptr)) in enumerate(zip(test_elements, test_cell_ptrs))
         for (q,(bcell,bptr)) in enumerate(zip(trial_elements, trial_cell_ptrs))
@@ -165,7 +165,7 @@ function assemblechunk_body!(biop,
         done += 1
         new_pctg = round(Int, done / todo * 100)
         if new_pctg > pctg + 9
-            verbose && myid == 1 && print(".")
+            verbose && myid == 2 && print(".")
             pctg = new_pctg
     end end
     verbose && myid == 1 && println("")
@@ -179,7 +179,7 @@ function assemblechunk_body_colored!(biop,
 
     test_shapes = refspace(test_space)
     trial_shapes = refspace(trial_space)
-
+@show "here"
     test_elements, test_assembly_data, test_cell_ptrs = testad
     trial_elements, trial_assembly_data, trial_cell_ptrs = trialad
 
@@ -190,7 +190,7 @@ function assemblechunk_body_colored!(biop,
         @set scheduler = scheduler
         @local zlocal = zeros(scalartype(biop, test_space, trial_space), num_tshapes, num_bshapes)
         tcell, tptr = test_elements[p], test_cell_ptrs[p]
-    
+
         for q in trialelementids
             bcell, bptr = trial_elements[q], trial_cell_ptrs[q]
             fill!(zlocal, 0)
@@ -385,7 +385,7 @@ function assembleblock_body!(biop::IntegralOperator,
                             m′ = get(test_id_in_blk, m, 0)
                             m′ == 0 && continue
                             store(a*zlocal[i,j]*b, m′, n′)
-    end end end end end end 
+    end end end end end end
     put!(zlocals, zlocal)
 end
 
@@ -653,6 +653,3 @@ function assemblecol_body!(biop,
                 for (m,a) in test_assembly_data[p,i]
                     store(a*zlocal[i,j]*b, m, 1)
 end end end end end
-
-
-

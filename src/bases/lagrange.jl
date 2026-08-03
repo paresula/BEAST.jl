@@ -79,6 +79,36 @@ function unitfunctioncxd0(mesh)
 end
 
 """
+    unitfunctioncxd0(mesh)
+
+Constructs a constant function with value 1 on the barycentric refinement of `mesh`.
+"""
+function dualunitfunctioncxd0(mesh)
+
+    T = coordtype(mesh)
+    geometry = mesh
+
+    # create the local shapes
+    fns = Vector{Vector{Shape{T}}}(undef, 1)
+    pos = Vector{vertextype(mesh)}(undef, 1)
+    fns[1] = [Shape(i, 1, T(1.0)) for (i, cell) in enumerate(mesh)]
+
+    # Arguably, the position is fairly meaningless
+    # in case of a global function. Might be replaced by something
+    # more useful.
+    # For now, we fill it with the average position of the shape functions
+    p = vertextype(mesh)(0.0, 0.0, 0.0)
+    for cell in mesh
+        p += cartesian(center(chart(mesh, cell)))
+    end
+    pos[1] = p ./ numcells(mesh)
+
+    NF = 1
+    LagrangeBasis{0,-1,NF}(geometry, fns, pos)
+end
+
+
+"""
     unitfunctionc0d1(mesh)
 
 Constructs a constant function with value 1 on `mesh` consisting of linear shapes. For dirichlet=true goes to zero on the boundary.
@@ -1126,9 +1156,9 @@ function dual0forms_body(mesh::CompScienceMeshes.AbstractMesh{<:Any,3}, refd, bn
         x31, supp31_int_nodes, _ = extend_0_form(supp31, dir31_nodes, x0, Lg31_prt)
         x12, supp12_int_nodes, _ = extend_0_form(supp12, dir12_nodes, x0, Lg12_prt)
 
-        port1_nodes = union(port, supp31_int_nodes, supp12_int_nodes)
-        port2_nodes = union(port, supp12_int_nodes, supp23_int_nodes)
-        port3_nodes = union(port, supp23_int_nodes, supp31_int_nodes)
+        port1_nodes = CompScienceMeshes.union(port, supp31_int_nodes, supp12_int_nodes)
+        port2_nodes = CompScienceMeshes.union(port, supp12_int_nodes, supp23_int_nodes)
+        port3_nodes = CompScienceMeshes.union(port, supp23_int_nodes, supp31_int_nodes)
 
         x1_prt = [x0; x31; x12]
         x2_prt = [x0; x12; x23]

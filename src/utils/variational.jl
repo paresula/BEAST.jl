@@ -198,7 +198,7 @@ function genspace(syms...)
             push!(stops,stop)
         end
     end
-    
+
     return space, starts, stops
 end
 
@@ -210,7 +210,7 @@ macro hilbertspace(syms...)
     k = 1
     for (s, (start,stop)) in enumerate(zip(starts,stops))
 
-        
+
         len = stop-start+1
         if syms[s] isa Symbol
             sym = syms[s]
@@ -345,6 +345,14 @@ function +(a::BilForm, b::BilForm)
     @assert a.test_space == b.test_space
     @assert a.trial_space == b.trial_space
     BilForm(a.test_space, a.trial_space, [a.terms; b.terms])
+end
+
+function sum(a::Vector{BilForm})
+    for i in eachindex(a)
+        @assert a[1].test_space == a[i].test_space
+        @assert a[1].trial_space == a[i].trial_space
+    end
+    BilForm(a[1].test_space, a[1].trial_space, [getfield.(a, terms)])
 end
 
 function+(a::LinForm, b::LinForm)

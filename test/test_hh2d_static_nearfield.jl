@@ -22,7 +22,7 @@ using Test
 
     # Interior problem
     # Formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.1
-  
+
     pos1 = SVector(r * 1.5, 0.0)  # positioning of point charges
     pos2 = SVector(-r * 1.5, 0.0)
 
@@ -83,7 +83,7 @@ using Test
     err_INPSL_field = norm(field_INPSL + Efield.(pts)) / norm(Efield.(pts))
     err_INPDL_field = norm(field_INPDL + Efield.(pts)) / norm(Efield.(pts))
 
-    # Exterior problem 
+    # Exterior problem
     # formulations from Sauter and Schwab, Boundary Element Methods(2011), Chapter 3.4.1.2
 
     pos1 = SVector(r * 0.5, 0.0)
